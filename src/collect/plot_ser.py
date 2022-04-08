@@ -49,7 +49,7 @@ for i in range(2):
     axsw[i].set_yticks([])
 axa.set_ylim([-20, 20])
 axw.set_ylim([-150, 150])
-axa.set_title('acc')
+axa.set_title(r'$\mathbf{a}$')
 axa.set_ylabel(r'$\frac{m}{s^2}$')
 axw.set_title(r'$\omega$')
 axw.set_ylabel(r'$\frac{deg}{s}$')
