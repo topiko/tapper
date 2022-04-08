@@ -67,9 +67,9 @@ void loop(){
   // Get acceleration: 
   while (IMU.accelerationAvailable()){
     IMU.readAcceleration(ax, ay, az);
-    state.accel[0] = az;
-    state.accel[1] = -ax;
-    state.accel[2] = -ay;
+    state.accel[0] = -az;
+    state.accel[1] = ax;
+    state.accel[2] = ay;
   }
 
   // Get gyro:
