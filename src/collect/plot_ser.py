@@ -26,9 +26,9 @@ fig, (axa, axw) = plt.subplots(2, 1, sharex=True, figsize=(10,6))
 
 la_l = [None]*3
 lw_l = [None]*3
-for i,ls in zip(range(3), ('-', '--', '-.')):
-    la_l[i], = axa.plot([], [], ls, color='black', label=f'a_{i}')
-    lw_l[i], = axw.plot([], [], ls, color='black', label=f'w_{i}')
+for i, ls, lab in zip(range(3), ('-', '--', '-.'), ('x', 'y', 'z')):
+    la_l[i], = axa.plot([], [], ls, color='black', label=rf'$a_{lab}$')
+    lw_l[i], = axw.plot([], [], ls, color='black', label=rf'$\omega_{lab}$')
 
 lw_sw = [None]*2
 axsw = [None]*2
