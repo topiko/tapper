@@ -12,9 +12,9 @@ from utils import SER, set_collect, read_ser, update_df
 
 plt.style.use('pltstyle.mplstyle')
 
-COLLECTT = 200
+COLLECTT = 3.5
 FREQ = 100
-N = COLLECTT*FREQ
+N = int(COLLECTT*FREQ)
 
 df = pd.DataFrame(
     np.zeros((N, 8)),
