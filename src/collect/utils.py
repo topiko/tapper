@@ -26,13 +26,13 @@ def unpack(bytearr : bytearray,
 
 
 
-def collect_start_stop(ser : serial.Serial,
-                       start : bool = True) -> None:
+def set_collect(ser : serial.Serial,
+                collect : bool = True) -> None:
     """
     Stop the data collection.
     """
-    LOG.info(f'Collect state change from {not start} --> {start}')
-    mode = (int(start)).to_bytes(1, byteorder='big')
+    LOG.info(f'Collect state --> {collect}')
+    mode = (int(collect)).to_bytes(1, byteorder='big')
     ser.write(mode)
 
 def read_ser(ser : serial.Serial) -> tuple[np.ndarray, int, bool]:

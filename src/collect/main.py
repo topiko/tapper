@@ -6,7 +6,7 @@ import struct
 
 import numpy as np
 import pandas as pd
-from utils import collect_start_stop, read_ser, update_df
+from utils import set_collect, read_ser, update_df
 from utils import BAUD, NBYTES, G, SER
 
 LOG = logging.Logger(__name__)
@@ -15,7 +15,7 @@ COLLECTT = 1
 N = 100*COLLECTT
 
 mode = False
-collect_start_stop(SER, mode)
+set_collect(SER, mode)
 
 df = pd.DataFrame(
     np.zeros((N, 8)),
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     while True:
         if (time.time()-tup) > COLLECTT:
             mode = not mode
-            collect_start_stop(SER, mode)
+            set_collect(SER, mode)
             tup = time.time()
             idx = 0
 
