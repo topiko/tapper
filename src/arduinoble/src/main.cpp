@@ -14,7 +14,7 @@ uint8_t mode = 0; // Operation mode: 0 == FAILSAFE
 uint8_t switchState = 0; // Operation mode: 0 == FAILSAFE
 unsigned long lastWrite = 0;
 unsigned long sinceLastWrite;
-static unsigned long PERIOD = 10000; // # 1 / freq[hz] * mus/s 
+static unsigned long WRITEPERIOD = 10000; // # 1 / freq[hz] * mus/s 
 
 struct StateStruct {
   float accel[3];             // 4*3 = 12 The order is important here!!! --> 32bit system likes to make everything 32bit...
@@ -64,9 +64,7 @@ uint8_t readSwitch(){
 
 void loop(){
   
-  
-  // Get acceleration:
-  
+  // Get acceleration: 
   while (IMU.accelerationAvailable()){
     IMU.readAcceleration(ax, ay, az);
     state.accel[0] = az;
@@ -84,7 +82,7 @@ void loop(){
   
 
   sinceLastWrite = micros() - lastWrite;
-  if (mode==1 && sinceLastWrite>PERIOD){
+  if (mode==1 && sinceLastWrite>WRITEPERIOD){
     state.deltaT = (uint16_t)sinceLastWrite; 
     state.switchState = readSwitch(); 
     writeSerial();
