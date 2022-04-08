@@ -8,7 +8,7 @@ r = 4.0;
 R = 8;
 T = 15;
 wallT=1.6;
-tiecornerR = 10;
+tiecornerR = 8;
 
 pivot_x = -W/2 + R;
 pivot_y = H/2 - R;
@@ -16,10 +16,15 @@ pivot_y = H/2 - R;
 bearingBore=5;
 bearingD = 11;
 bearingT = 4;
-TIGHTSP = .1;
+TIGHTSP = .05;
 MEDSP = .3;
 
-function corner_r(R_, r_) = [[pivot_x, pivot_y, R_], [W/2-r, H/2-r, r_], [-W/2+r, -H/2+r, r_], [W/2-r, -H/2+r, r_]];
+function corner_r(R_, r_) = [
+[pivot_x, pivot_y, R_, false], 
+[W/2-r, H/2-r, r_, true], 
+[-W/2+r, -H/2+r, r_, true], 
+[W/2-r, -H/2+r, r_, true]
+];
 
 module base2d(wallT=0){
   
@@ -45,17 +50,17 @@ module bearingaxle(){
 
 module tiecorner(R, key="cut"){
   R_ = key=="cut" ? R - wallT : R;
+  center = [W/2-r, H/2-r, 0];
 
-  translate([W/2, H/2, 0])
-  if (key=="cut"){cylinder(h=T-2*wallT, r=R_, center=true);}
+  if (key=="cut"){translate(center) cylinder(h=T-2*wallT, r=R_, center=true);}
   else if (key=="wall"){
-    rotate([0,0,180])
     intersection(){ 
+      translate(center)
       difference(){
         cylinder(h=T/2, r=R_);
         cylinder(h=T/2, r=R_-wallT);
       }
-      cube(100);
+      linear_extrude(height=100) base2d();
     }
   } 
 }
@@ -66,15 +71,18 @@ module finger(key="finger", rotAngle=0){
  
   D1 = 8;
   D2 = 3;
+  D3 = 2*r+.01;
   L = 50;
   module base2d(){
     module p1(){translate([(bearingD+wallT)/2 - D1/2, R + D1/2 +2*MEDSP]) circle(d=D1 - 2*r);}
     module p2(){translate([(bearingD+wallT)/2 - D2/2 - L, R + D2/2 + 2*MEDSP]) circle(d=D2 - 2*r);}
-    module p3(){circle(d=bearingD + 2*wallT - 2*r);}
+    module p3(){translate([(bearingD+wallT)/2 - D2 - L, R + D3/2 + 2*MEDSP + 3]) circle(d=D3 - 2*r);}
+    module p4(){circle(d=bearingD + 2*wallT - 2*r);}
 
     module base(){
       hull(){p1(); p2();}
-      hull(){p3(); p1();}
+      hull(){p4(); p1();}
+      hull(){p2(); p3();}
     }
     
     mirror([1,0,0]) offset(-(r+addr)) offset(2*(r+addr)) base();
@@ -84,10 +92,10 @@ module finger(key="finger", rotAngle=0){
     linear_extrude(height=fingerT - 2*bearingT)
     difference(){
       circle(d=bearingD-4*TIGHTSP); 
-      circle(d=bearingBore+2*MEDSP); 
+      circle(d=bearingD-3); 
     }
   }
-  fingerT = key=="cut" ? T-2*wallT : T-2*(wallT+MEDSP+TIGHTSP);
+  fingerT = key=="cut" ? T-2*wallT : T-2*(wallT+MEDSP);
   translate([pivot_x, pivot_y]) rotate([0,0,rotAngle]) 
   {
   linear_extrude(height=fingerT, center=true)
@@ -106,7 +114,9 @@ module closebolts(key="bars", side="top"){
   for (pos=corner_r(R, r)){
    translate([pos[0], pos[1],0]) 
    if (key=="cut"){translate([0,0,-T/2]) bolt(T - boltD/2 - .5, boltD,  .30);}
-   else if (key=="bars"){cylinder(h=T/2, d=boltD+2*wallT);}
+   else if (key=="bars"){
+     if (pos[3]) cylinder(h=T/2, d=boltD+2*wallT);
+   }
   }  
   
 }
@@ -129,13 +139,14 @@ module switch(key="cut", side="top"){
 }
 
 module side(side="bottom"){
-  ledPos = [W/2-13, H/2 - 5];
+  ledPos = [W/2-15.1, H/2 - 5];
   ledD = 3 + 2*TIGHTSP;
   module side_(){
     union(){
       difference(){
         linear_extrude(height = T/2) base2d();
         translate([0,0,-1]) linear_extrude(height = T/2 - wallT + 1) base2d(wallT);
+        tiecorner(tiecornerR);
       }
       closebolts(key="bars", side=side);
     }
@@ -149,7 +160,6 @@ module side(side="bottom"){
   difference(){
     if (side=="bottom"){mirror([0,0,1]) side_();}    
     else if (side=="top") side_();
-    tiecorner(tiecornerR);
     for (rot=[0,40]) finger("cut", rot); 
     closebolts("cut", side=side);
     switch(key="cut", side=side);
@@ -159,7 +169,7 @@ module side(side="bottom"){
 }
 
 
-module nano(key){translate([W/2-25,-H/2+17,T/2]) mirror([0,0,1]) nanoble(wallT + 2, key=key);}
+module nano(key){translate([W/2-30,-H/2+17,T/2]) rotate([0,0,180]) mirror([0,0,1]) nanoble(wallT + 2, key=key);}
 
 side("top");
 translate([0,0,-.1]) side("bottom");

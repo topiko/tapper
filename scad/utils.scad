@@ -1,7 +1,11 @@
+
+// BOLTS:
 BOLT15TIGHT = 1.4;
-BOLT3TIGHT = 2.8;
-BOLT25TIGHT = 2.3;
-BOLT25LOOSE = 2.6;
+BOLT3TIGHT=2.9;
+BOLT3LOOSE=3.05;
+BOLT25TIGHT = 2.30; // 2.35
+BOLT25LOOSE = 2.60;
+
 
 module generalel(dims, mountpos, boltD=BOLT3TIGHT, H=2, key="mockup", boltH=0, poleD=0){
 	
