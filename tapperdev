@@ -1,0 +1,16 @@
+source /home/topiko/.screenrc
+sessionname tapperdev 
+screen -t A 1
+stuff "conda activate tapper^M"
+stuff "cd `pwd`/src/collect/^M"
+stuff "vim plot_ser.py^M"
+screen -t B 2
+stuff "conda activate tapper^M"
+stuff "cd `pwd`^M"
+stuff "git status^M"
+split -v
+select A
+focus
+select B
+focus
+layout save default
