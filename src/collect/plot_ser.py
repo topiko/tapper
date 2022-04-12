@@ -8,11 +8,12 @@ import numpy as np
 import pandas as pd
 
 from matplotlib.animation import FuncAnimation
-from utils import SER, G, set_collect, read_ser, update_df
+from utils import G, get_ser, set_collect, read_ser, update_df
 
 plt.style.use('pltstyle.mplstyle')
 
-COLLECTT = 50
+SER = get_ser()
+COLLECTT = 5
 FREQ = 100
 N = int(COLLECTT*FREQ)
 
@@ -131,6 +132,7 @@ hash_ = hashlib.sha1()
 hash_.update(str(time.time()).encode('utf-8'))
 
 df.to_hdf(f'data/N={N}_{hash_.hexdigest()[:10]}.hdf5', 'data')
+
 
 
 
