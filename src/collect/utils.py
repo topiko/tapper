@@ -9,12 +9,13 @@ LOG = logging.getLogger()
 BAUD = 115200
 NBYTES = 28
 G = 9.81
-SER = serial.Serial(
-            port='/dev/ttyACM0',
-            baudrate=BAUD,
-            timeout=.01,
-            write_timeout=0,
-        )
+
+get_ser = lambda: serial.Serial(
+    port='/dev/ttyACM0',
+    baudrate=BAUD,
+    timeout=.01,
+    write_timeout=0,
+)
 
 
 def unpack(bytearr : bytearray,
@@ -66,9 +67,9 @@ def update_df(idx : int,
               sw : bool) -> pd.DataFrame:
 
 
-    df.loc[idx, ['ax', 'ay', 'az']] = imu_arr[:3]*G
+    df.loc[idx, ['ax', 'ay', 'az']] = imu_arr[:3]
     df.loc[idx, ['wx', 'wy', 'wz']] = imu_arr[3:]
-    df.loc[idx, 'dt[mus]'] = dt
+    df.loc[idx, 'dt'] = dt
     df.loc[idx, 'sw'] = sw
 
     return df
