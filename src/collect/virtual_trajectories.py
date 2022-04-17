@@ -1,23 +1,25 @@
 
-import quaternion
+import quaternion as qt
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 from utils import G
+from qutils import q2eul, eul2q
 from scipy.interpolate import interp1d
 from scipy.misc import derivative
 from imufusion import Ahrs
 
 plt.style.use('pltstyle.mplstyle')
 
+
 class Trajectory():
 
     def __init__(self, pos_fun, orient_fun, add_g=True):
         self.idx = 0
         self.dt = .01
-        self.g_xyz = quaternion.quaternion(0, 0, 0, G if add_g else 0)
+        self.g_xyz = qt.quaternion(0, 0, 0, G if add_g else 0)
         self.pos_fun = pos_fun
         self.orient_fun = orient_fun
 
@@ -65,6 +67,15 @@ class Trajectory():
         # Extract angular velocities
         self._virtual_w_XYZ = get_d(self.virtual_orient, order=1)
 
+    def body2world(self, vec):
+        return (self.orient_xyz*qt.quaternion(0, *vec)*self.orient_xyz.conjugate()).vec
+
+    def world2body(self, arr):
+        arr = np.hstack((np.zeros((len(arr), 1)), arr))
+        qts = qt.from_float_array(arr)
+
+        return self.orient_xyz.conjugate()*qts*self.orient_xyz
+
     @property
     def curtime(self):
         return self.idx*self.dt
@@ -85,7 +96,7 @@ class Trajectory():
 
     @property
     def orient_xyz(self):
-        return quaternion.from_euler_angles(self.virtual_orient)
+        return np.array([eul2q(*angles) for angles in self.virtual_orient])
 
     @property
     def g_XYZ(self):
@@ -96,15 +107,25 @@ class Trajectory():
         return self._virtual_acc_xyz
 
     @property
+    def virtual_acc_mes(self):
+        return self._virtual_acc_xyz + self.g_xyz.vec
+
+    @property
+    def virtual_w_mes(self):
+        virtual_w_mes = self.world2body(self.virtual_w_XYZ)
+        virtual_w_mes = qt.as_float_array(virtual_w_mes)[:, 1:]
+        return self.w_mes + virtual_w_mes
+
+    @property
     def virtual_acc_XYZ(self):
         acc_quats = np.hstack((np.zeros(len(self.virtual_acc_xyz)).reshape(-1, 1),
                                self.virtual_acc_xyz))
-        acc_quats = quaternion.from_float_array(acc_quats)
+        acc_quats = qt.from_float_array(acc_quats)
         acc_XYZ_quat = self.orient_xyz*acc_quats*self.orient_xyz.conjugate()
         self._acc_XYZ_quat = acc_XYZ_quat
 
-        g_XYZ = quaternion.as_float_array(self.g_XYZ)[:,1:]
-        acc_XYZ = quaternion.as_float_array(acc_XYZ_quat)[:,1:]
+        g_XYZ = qt.as_float_array(self.g_XYZ)[:,1:]
+        acc_XYZ = qt.as_float_array(acc_XYZ_quat)[:,1:]
 
         return g_XYZ + acc_XYZ
 
@@ -166,6 +187,19 @@ def add_virtual_signal(df, pos_fun, orient_fun):
 
     return traj, acc_mes, w_mes
 
+def traj2euler(traj : Trajectory):
+
+    ahrs = Ahrs()
+    dts = np.insert(np.diff(traj.times), 0, 0)
+    attitude = np.empty((len(dts), 3))
+    i = 0
+    for w, a, dt in zip(traj.virtual_w_mes, traj.virtual_acc_mes, dts):
+        ahrs.update_no_magnetometer(w, a, dt)
+        attitude[i] = ahrs.quaternion.to_euler()/np.pi*180
+        i += 1
+
+    return attitude
+
 if __name__ == '__main__':
 
     vx = 0
@@ -176,23 +210,29 @@ if __name__ == '__main__':
     orient_fun = lambda t: np.array([0, np.pi/2*np.sin(t/period*2*np.pi), 0])
 
 
-    df = pd.read_hdf('data/N=500_f2bce1a4d5.hdf5')
+    df = pd.read_hdf('data/N=500_785a36cd6c.hdf5')
     traj, orig_accs, orig_ws = add_virtual_signal(df, pos_fun, orient_fun)
 
 
-    _, axarr = plt.subplots(6,1, figsize=(10,8), sharex=True)
-    for ax, dat in zip(axarr.ravel(),
-                  (orig_accs, traj.acc_XYZ,
-                   orig_ws, traj.w_XYZ,
-                   traj.virtual_acc_XYZ, traj.virtual_w_XYZ)):
+    attitude = traj2euler(traj)
+    _, axarr = plt.subplots(7,1, figsize=(10,8), sharex=True)
+    for ax, dat in zip(axarr.ravel()[:6],
+                       (orig_accs, traj.acc_XYZ,
+                        orig_ws, traj.w_XYZ,
+                        traj.virtual_acc_XYZ, traj.virtual_w_XYZ)):
         for i, lab in zip(range(3), ('x', 'y', 'z')):
             ax.plot(traj.times, dat[:, i], label=lab)
+
+    for i, lab in zip(range(3), ('roll (x)', 'pitch (y)', 'yaw (z)')):
+        axarr[6].plot(traj.times, attitude[:,i], label=lab)
+    axarr[6].legend()
 
     for ax in axarr[:4]:
         ax.legend()
         ax_ = ax.twinx()
         ax_.plot(traj.times, df.sw, lw=.5, color='black')
         ax_.set_yticks([])
+
 
 
 
