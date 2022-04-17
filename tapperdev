@@ -6,11 +6,11 @@ stuff "cd `pwd`/src/collect/^M"
 stuff "vim plot_ser.py^M"
 screen -t B 2
 stuff "conda activate tapper^M"
-stuff "cd `pwd`^M"
+stuff "cd `pwd`/src/collect^M"
 stuff "git status^M"
-split -v
+# split -v
 select A
 focus
-select B
-focus
+# select B
+# focus
 layout save default
