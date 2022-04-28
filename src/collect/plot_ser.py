@@ -13,8 +13,9 @@ from utils import G, get_ser, set_collect, read_ser, update_df
 plt.style.use('pltstyle.mplstyle')
 
 SER = get_ser()
-COLLECTT = 5
+COLLECTT = 15
 FREQ = 100
+THIST=5
 N = int(COLLECTT*FREQ)
 
 df = pd.DataFrame(
@@ -54,7 +55,7 @@ sw_arr = np.zeros(N)
 t_arr = np.zeros(N)
 
 
-axa.set_xlim([-5, 0])
+axa.set_xlim([-THIST, 0])
 for i in range(4):
     axsw[i].set_ylim([-.1, 1.1])
     axsw[i].set_yticks([])
@@ -102,15 +103,17 @@ def anim(frame, df):
             t_arr[frame] = t_arr[frame-1]+dt
         sw_arr[frame] = sw
 
-        times = t_arr[:frame]-t_arr[frame]
+        start = max(0, frame - FREQ*THIST)
+        times = t_arr[start:frame]-t_arr[frame]
+
         for i in range(3):
-            la_l[i].set_data(times, a_arr[:frame, i])
-            lag_l[i].set_data(times, ag_arr[:frame, i])
-            lw_l[i].set_data(times, w_arr[:frame, i])
-            lahrs_l[i].set_data(times, ahrs_arr[:frame, i])
+            la_l[i].set_data(times, a_arr[start:frame, i])
+            lag_l[i].set_data(times, ag_arr[start:frame, i])
+            lw_l[i].set_data(times, w_arr[start:frame, i])
+            lahrs_l[i].set_data(times, ahrs_arr[start:frame, i])
 
         for i in range(4):
-            lw_sw[i].set_data(times, sw_arr[:frame])
+            lw_sw[i].set_data(times, sw_arr[start:frame])
 
     return *la_l, *lag_l, *lw_l, *lahrs_l, *lw_sw,
 
