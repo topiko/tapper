@@ -2,15 +2,15 @@ source /home/topiko/.screenrc
 sessionname tapperdev 
 screen -t VIM 1
 stuff "conda activate tapper^M"
-stuff "cd `pwd`/src/collect/^M"
+stuff "cd `pwd`/src^M"
 stuff "vim^M"
-screen -t PYTHON 2
+screen -t COLLECT 2
 stuff "conda activate tapper^M"
-stuff "cd `pwd`/src/collect^M"
-stuff "python sensfusion.py^M"
-# split -v
+stuff "cd `pwd`/src^M"
+stuff "python collect/plot_ser.py"
+screen -t INFERENCE 3
+stuff "conda activate torch^M"
+stuff "cd `pwd`/src^M"
 select VIM
 focus
-# select PYTHON
-# focus
 layout save default
